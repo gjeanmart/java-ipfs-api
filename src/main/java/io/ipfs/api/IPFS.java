@@ -447,29 +447,38 @@ public class IPFS {
 
     public class Dag {
         public byte[] get(Cid cid) throws IOException {
-            return retrieve("block/get?stream-channels=true&arg=" + cid);
+            return retrieve("dag/get?arg=" + cid);
         }
 
-        public MerkleNode put(byte[] object) throws IOException {
+        public Cid put(byte[] object) throws IOException {
             return put("json", object, "cbor");
         }
 
-        public MerkleNode put(String inputFormat, byte[] object) throws IOException {
+        public Cid put(String inputFormat, byte[] object) throws IOException {
             return put(inputFormat, object, "cbor");
         }
 
-        public MerkleNode put(byte[] object, String outputFormat) throws IOException {
+        public Cid put(byte[] object, String outputFormat) throws IOException {
             return put("json", object, outputFormat);
         }
 
-        public MerkleNode put(String inputFormat, byte[] object, String outputFormat) throws IOException {
+        public Cid put(String inputFormat, byte[] object, String outputFormat) throws IOException {
             block.put(Arrays.asList(object));
             String prefix = "http://" + host + ":" + port + version;
-            Multipart m = new Multipart(prefix + "block/put/?stream-channels=true&input-enc=" + inputFormat + "&f=" + outputFormat, "UTF-8");
+            Multipart m = new Multipart(prefix + "dag/put?input-enc=" + inputFormat + "&format=" + outputFormat + "&pin=false", "UTF-8");
             m.addFilePart("file", Paths.get(""), new NamedStreamable.ByteArrayWrapper(object));
             String res = m.finish();
-            return MerkleNode.fromJSON(JSONParser.parse(res));
+            
+            return fromJson(JSONParser.parseStream(res));
         }
+    }
+    
+    public static Cid fromJson(Object rawjson) {
+        List json = (List)rawjson;
+        Map cid = (Map) ((Map) json.get(0)).get("Cid");
+        if (cid != null)
+            return Cid.decode((String) cid.get("/"));
+        return null;  
     }
 
     public class Diag {

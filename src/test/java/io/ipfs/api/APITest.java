@@ -21,12 +21,11 @@ public class APITest {
     @Test
     public void dag() throws IOException {
         byte[] object = "{\"data\":1234}".getBytes();
-        MerkleNode put = ipfs.dag.put("json", object);
+        Cid put = ipfs.dag.put("json", object);
 
         Cid expected = Cid.decode("zdpuB2CbdLrUK5AgZusm4hraisDDDC135ugdmZWvMHhhsSYTb");
 
-        Multihash result = put.hash;
-        Assert.assertTrue("Correct cid returned", result.equals(expected));
+        Assert.assertTrue("Correct cid returned", put.equals(expected));
 
         byte[] get = ipfs.dag.get(expected);
         Assert.assertTrue("Raw data equal", Arrays.equals(object, get));
@@ -38,9 +37,7 @@ public class APITest {
         tmp.put("data", new CborObject.CborByteArray("G'day mate!".getBytes()));
         CborObject original = CborObject.CborMap.build(tmp);
         byte[] object = original.toByteArray();
-        MerkleNode put = ipfs.dag.put("cbor", object);
-
-        Cid cid = (Cid) put.hash;
+        Cid cid = ipfs.dag.put("cbor", object);
 
         byte[] get = ipfs.dag.get(cid);
         CborObject cborObject = CborObject.fromByteArray(get);
